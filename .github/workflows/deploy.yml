@@ -1,0 +1,43 @@
+name: Deploy static site to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# Pages deploy ko in permissions ki zarurat hoti hai
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ek waqt me sirf 1 pages deploy
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Yahan par aap build steps add kar sakte hain (agar koi toolchain nahi, to skip)
+      # - run: <your build commands>
+
+      - name: Upload static files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .  # project root jahan index.html, style.css, script.js hain
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
